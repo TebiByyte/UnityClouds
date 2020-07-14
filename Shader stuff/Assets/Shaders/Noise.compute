@@ -5,6 +5,12 @@ RWStructuredBuffer<float3> Data;
 int numPoints;
 float texSize;
 
+float map(float x, float minin, float maxin, float minout, float maxout) {
+	float t = (x - minin) / (maxin - minin);
+
+	return t * (maxout - minout) + minout;
+}
+
 [numthreads(8,8,8)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
@@ -24,5 +30,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 		}
 	}
 
-	Result[id] = float4(dist, dist, dist, dist);
+	float dn = 1 - map(dist, 0, 0.5f, 0, 1.0f);
+
+	Result[id] = float4(dn, dn, dn, dn);
 }

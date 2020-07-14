@@ -10,11 +10,6 @@ public class NoiseEditor : Editor
     {
         NoiseGenerator generator = (NoiseGenerator)target;
 
-        if (GUILayout.Button("Generate Points"))
-        {
-            generator.generatePoints();
-        }
-
         if (GUILayout.Button("Generate Noise Texture"))
         {
             generator.generateNoise();
