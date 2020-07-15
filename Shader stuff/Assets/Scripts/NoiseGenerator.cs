@@ -49,6 +49,7 @@ public class NoiseGenerator : MonoBehaviour
     private void Start()
     {
         createTexture(textureRes, RenderTextureFormat.ARGBFloat);
+        generateNoise();
     }
 
     void generatePoints()
