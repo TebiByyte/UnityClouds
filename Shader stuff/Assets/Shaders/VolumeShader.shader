@@ -9,7 +9,7 @@
     {
         // No culling or depth
         Cull Off ZWrite Off ZTest Always
-
+		Tags {"LightMode" = "ForwardAdd"}
         Pass
         {
             CGPROGRAM
@@ -18,6 +18,7 @@
 
             #include "UnityCG.cginc"
 			#include "UnityLightingCommon.cginc"
+			#include "AutoLight.cginc"
 
             struct appdata
             {
@@ -45,6 +46,7 @@
 
             sampler2D _MainTex;
 			sampler2D _CameraDepthTexture;
+			sampler2D _ShadowMapTexture;
 			sampler2D _WeatherMap;
 			sampler3D _NoiseTex;
 			float3 VolumeBoundsMax;
@@ -52,6 +54,7 @@
 			float3 noiseScale;
 			float3 noiseOffset;
 			float darknessThreshold;
+			float densityThreshold;
 
 			float2 rayBoxDst(float3 boundsMin, float3 boundsMax, float3 rayOrigin, float3 invRaydir) {
 				float3 t0 = (boundsMin - rayOrigin) * invRaydir;
@@ -71,10 +74,16 @@
 			{
 				float heightPercentBottom = (p.y - VolumeBoundsMin.y) / (VolumeBoundsMax.y - VolumeBoundsMin.y);
 				float heightPercentTop = (VolumeBoundsMax.y - p.y) / (VolumeBoundsMax.y - VolumeBoundsMin.y);
+				
+				//Calculate actual map coordinates here
+				float xPercent = (p.x - VolumeBoundsMin.x) / (VolumeBoundsMax.x - VolumeBoundsMin.x);
+				float zPercent = (p.z - VolumeBoundsMin.z) / (VolumeBoundsMax.z - VolumeBoundsMin.z);
 
-				float noiseSample = 4 * heightPercentTop * heightPercentBottom * (tex3D(_NoiseTex, p * noiseScale + noiseOffset));
+				float4 weatherMapSample = tex2D(_WeatherMap, float2(xPercent, zPercent));
 
-				float density = max(0, noiseSample.r - 0.6f);
+				float noiseSample = weatherMapSample * 4 * heightPercentBottom * heightPercentTop * tex3D(_NoiseTex, p * noiseScale + noiseOffset).r;
+
+				float density = max(0, noiseSample - densityThreshold);
 
 				return density;
 			}
@@ -95,6 +104,7 @@
 				}
 
 				float transmittance = exp(-totalDensity * lightAbsorbtion);
+
 				return darknessThreshold + transmittance * (1 - darknessThreshold);
 			}
 

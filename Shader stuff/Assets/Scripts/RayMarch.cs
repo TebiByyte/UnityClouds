@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode, ImageEffectAllowedInSceneView]
+[RequireComponent(typeof(NoiseGenerator))]
+[RequireComponent(typeof(WeatherMapGen))]
 public class RayMarch : MonoBehaviour
 {
     public Material effectMat;
     public GameObject bounds;
-    public NoiseGenerator gen;
+    public NoiseGenerator gen;//These should be components
+    public WeatherMapGen weatherGen;
     public Vector3 noiseScale;
     public Vector3 noiseOffset;
     public float darknessThreshold;
+    public float densityThreshold;
 
     public void Start()
     {
-        gen.numberOfPoints = 100;
-        gen.generateNoise();
+        weatherGen.generateNoise();
     }
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -26,6 +29,8 @@ public class RayMarch : MonoBehaviour
         effectMat.SetVector("noiseScale", noiseScale);
         effectMat.SetVector("noiseOffset", noiseOffset);
         effectMat.SetFloat("darknessThreshold", darknessThreshold);
+        effectMat.SetFloat("densityThreshold", densityThreshold);
+        effectMat.SetTexture("_WeatherMap", weatherGen.noiseTexture);
 
         Graphics.Blit(source, destination, effectMat);
     }

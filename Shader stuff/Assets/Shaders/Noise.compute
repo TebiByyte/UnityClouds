@@ -1,7 +1,9 @@
 ﻿#pragma kernel CSMain
 
 RWTexture3D<float4> Result;
-RWStructuredBuffer<float3> Data;
+RWStructuredBuffer<float3> Data0;
+RWStructuredBuffer<float3> Data1;
+RWStructuredBuffer<float3> Data2;
 int numPoints;
 float texSize;
 
@@ -11,26 +13,41 @@ float map(float x, float minin, float maxin, float minout, float maxout) {
 	return t * (maxout - minout) + minout;
 }
 
-[numthreads(8,8,8)]
-void CSMain (uint3 id : SV_DispatchThreadID)
-{
-	float dist = 1000;
-	float3 pixel = id.xyz;
+float fmod(float x, float t) {
+	return x - t * floor(x / t);
+}
 
-	for (int i = 0; i < numPoints; i++) 
+float worley(float3 position, RWStructuredBuffer<float3> points) {
+	float dist = 1000;
+
+	for (int i = 0; i < numPoints; i++)
 	{
-		float3 scaledId = id / texSize - float3(0.5f, 0.5f, 0.5f);
-		float dx = scaledId.x - Data[i].x;
-		float dy = scaledId.y - Data[i].y;
-		float dz = scaledId.z - Data[i].z;
+		float3 scaledId = position / texSize - float3(0.5f, 0.5f, 0.5f);
+		float dx = scaledId.x - points[i].x;
+		float dy = scaledId.y - points[i].y;
+		float dz = scaledId.z - points[i].z;
 		float d = pow(dx * dx + dy * dy + dz * dz, 0.5f);
-		
+
 		if (d < dist) {
 			dist = d;
 		}
 	}
 
-	float dn = 1 - map(dist, 0, 0.6f, 0, 1.0f);
+	return 1 - map(dist, 0, 0.6f, 0, 1.0f);
+}
 
-	Result[id] = float4(dn, dn, dn, dn);
+[numthreads(8,8,8)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+
+	float3 wp1 = float3(fmod(2 * id.x, texSize), fmod(2 * id.y, texSize), fmod(2 * id.z, texSize));
+	float3 wp2 = float3(fmod(4 * id.x, texSize), fmod(4 * id.y, texSize), fmod(4 * id.z, texSize));
+
+	float dr = worley(id.xyz, Data0);
+	float dg = worley(wp1, Data1);
+	float db = worley(wp2, Data2);
+
+	float sum = (dr + dg / 2 + db / 4) / 1.75;
+
+	Result[id] = float4(sum, sum, sum, 0);
 }

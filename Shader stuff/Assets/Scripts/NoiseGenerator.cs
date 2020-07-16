@@ -5,15 +5,11 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class NoiseGenerator : MonoBehaviour
 {
-    [HideInInspector]
-    public Vector3[] points;
     [Range(4, 40)]
     public int numberOfPoints = 20;
     public int textureRes = 512;
     public ComputeShader noiseGen;
     public RenderTexture noiseTexture;
-    private ComputeBuffer pointBuffer;
-    public Material shader;
 
     private Vector3[] cells = new Vector3[] {
             new Vector3(0, 0, 0),
@@ -46,13 +42,7 @@ public class NoiseGenerator : MonoBehaviour
             new Vector3(1, -1, -1),
             new Vector3(-1, -1, -1)};
 
-    private void Start()
-    {
-        createTexture(textureRes, RenderTextureFormat.ARGBFloat);
-        generateNoise();
-    }
-
-    void generatePoints()
+    Vector3[] generatePoints()
     {
         Vector3[] result = new Vector3[numberOfPoints * cells.Length];
         Vector3[] cell0 = new Vector3[numberOfPoints];
@@ -74,7 +64,7 @@ public class NoiseGenerator : MonoBehaviour
             }
         }
 
-        points = result;
+        return result;
     }
 
     public void resetNoise()
@@ -85,25 +75,35 @@ public class NoiseGenerator : MonoBehaviour
 
     public void generateNoise()
     {
-        generatePoints();
+        Vector3[] points0 = generatePoints();
+        Vector3[] points1 = generatePoints();
+        Vector3[] points2 = generatePoints();
 
         if (noiseTexture == null)
         {
             noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
         }
 
+        if (noiseGen == null)
+        {
+            Debug.Log("Doesn't exist");
 
-        pointBuffer = new ComputeBuffer(points.Length, 24, ComputeBufferType.Structured);
-        pointBuffer.SetData(points);
+        }
 
-        int kernel = noiseGen.FindKernel("CSMain");
-        noiseGen.SetInt("numPoints", points.Length);
-        noiseGen.SetTexture(kernel, "Result", noiseTexture);
-        noiseGen.SetBuffer(kernel, "Data", pointBuffer);
+        ComputeBuffer pointBuffer0 = new ComputeBuffer(points1.Length, 24, ComputeBufferType.Structured);
+        pointBuffer0.SetData(points0);
+        ComputeBuffer pointBuffer1 = new ComputeBuffer(points1.Length, 24, ComputeBufferType.Structured);
+        pointBuffer1.SetData(points1);
+        ComputeBuffer pointBuffer2 = new ComputeBuffer(points1.Length, 24, ComputeBufferType.Structured);
+        pointBuffer2.SetData(points2);
+
+        noiseGen.SetInt("numPoints", points0.Length);
+        noiseGen.SetTexture(0, "Result", noiseTexture);
+        noiseGen.SetBuffer(0, "Data0", pointBuffer0);
+        noiseGen.SetBuffer(0, "Data1", pointBuffer1);
+        noiseGen.SetBuffer(0, "Data2", pointBuffer2);
         noiseGen.SetFloat("texSize", textureRes);
-        noiseGen.Dispatch(kernel, 512 / 8, 512 / 8, 512 / 8);
-
-        shader.SetTexture("_MainTex", noiseTexture);
+        noiseGen.Dispatch(0, 512 / 8, 512 / 8, 512 / 8);
     }
 
     public RenderTexture createTexture(int size, RenderTextureFormat format)
