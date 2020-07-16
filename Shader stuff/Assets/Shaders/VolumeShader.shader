@@ -17,6 +17,7 @@
             #pragma fragment frag
 
             #include "UnityCG.cginc"
+			#include "UnityLightingCommon.cginc"
 
             struct appdata
             {
@@ -44,9 +45,13 @@
 
             sampler2D _MainTex;
 			sampler2D _CameraDepthTexture;
+			sampler2D _WeatherMap;
 			sampler3D _NoiseTex;
 			float3 VolumeBoundsMax;
 			float3 VolumeBoundsMin;
+			float3 noiseScale;
+			float3 noiseOffset;
+			float darknessThreshold;
 
 			float2 rayBoxDst(float3 boundsMin, float3 boundsMax, float3 rayOrigin, float3 invRaydir) {
 				float3 t0 = (boundsMin - rayOrigin) * invRaydir;
@@ -64,35 +69,33 @@
 
 			float sampleDensity(float3 p) 
 			{
-				return tex3D(_NoiseTex, p / 10).z;
+				float heightPercentBottom = (p.y - VolumeBoundsMin.y) / (VolumeBoundsMax.y - VolumeBoundsMin.y);
+				float heightPercentTop = (VolumeBoundsMax.y - p.y) / (VolumeBoundsMax.y - VolumeBoundsMin.y);
+
+				float noiseSample = 4 * heightPercentTop * heightPercentBottom * (tex3D(_NoiseTex, p * noiseScale + noiseOffset));
+
+				float density = max(0, noiseSample.r - 0.6f);
+
+				return density;
 			}
 
-			fixed4 marchRay(float3 start, float3 end) 
+			float lightMarch(float3 position) 
 			{
-				float3 dir = normalize(end - start);
-				const int iteration = 10;
-				const int shadowSteps = 8;
-				float t = 0;
-				float stepSize = length(end - start) / iteration;
-				float lightEnergy = 0;
-				//Leave out shadows for now
-				float density = stepSize;
-				float transmittance = 1;
+				float3 lightDir = _WorldSpaceLightPos0;
+				float dstInsideBox = rayBoxDst(VolumeBoundsMin, VolumeBoundsMax, position, 1 / lightDir).y;
+				float lightAbsorbtion = 0.3f;
 
-				for (int i = 0; i < iteration; i++) 
+				float stepSize = dstInsideBox / 8;
+				float totalDensity = 0;
+
+				for (int step = 0; step < 4; step++) 
 				{
-					float3 p = start + dir * t;
-					float currentSample = 0.1 * sampleDensity(p);
-
-					float curDensity = saturate(currentSample * density);
-					float3 absorbedLight = curDensity;
-
-					lightEnergy += absorbedLight * transmittance;
-					transmittance *= 1 - curDensity;
-					t += stepSize;
+					position += lightDir * stepSize;
+					totalDensity += max(0, sampleDensity(position) * stepSize);
 				}
 
-				return fixed4(lightEnergy, lightEnergy, lightEnergy, transmittance);
+				float transmittance = exp(-totalDensity * lightAbsorbtion);
+				return darknessThreshold + transmittance * (1 - darknessThreshold);
 			}
 
             fixed4 frag (v2f i) : SV_Target
@@ -109,20 +112,49 @@
 				float depth = LinearEyeDepth(nonLinearDepth) * length(i.viewVector);
 
 				bool rayHitBox = dstInsideBox > 0 && dstToBox < depth;
-				if (rayHitBox) {
-					float3 start = rayOrigin + dstToBox * rayDir;
-					float3 end = rayOrigin + (dstToBox + dstInsideBox) * rayDir;
 
-					if (dstToBox + dstInsideBox > depth) {
-						end = rayOrigin + depth * rayDir;
-					}
+				float3 start = rayOrigin + dstToBox * rayDir;
+				float3 end = rayOrigin + (dstToBox + dstInsideBox) * rayDir;
 
-					fixed4 result = marchRay(start, end);
-
-					col = fixed4(result.xyz * (1 - result.w) + col * result.w, 1);
+				if (dstToBox + dstInsideBox > depth) {
+					end = rayOrigin + depth * rayDir;
 				}
 
-                return col;
+				int numSteps = 100;
+				float dstTravelled = 0;
+				float stepSize = dstInsideBox / numSteps;
+				float dstLimit = min(depth - dstToBox, dstInsideBox);
+				float totalDensity = 0;
+				float transmittance = 1;
+				float lightEnergy = 0;
+				float lightAbsorbtionCloud = 1.0f;
+
+				for (int i = 0; i < numSteps; i++) {
+					if (dstTravelled > dstLimit) {
+						break;
+					}
+
+					float3 rayPos = rayOrigin + rayDir * (dstToBox + dstTravelled);
+					float density = sampleDensity(rayPos);
+					if (density > 0) {
+						float lightTrans = lightMarch(rayPos);
+						lightEnergy += density * stepSize * transmittance * lightTrans;
+						transmittance *= exp(-density * stepSize * lightAbsorbtionCloud);
+
+						if (transmittance < 0.01f) {
+							break;
+						}
+					}
+
+					dstTravelled += stepSize;
+
+				}
+
+				float3 cloudCol = lightEnergy * _LightColor0;
+				float3 color = col * transmittance + cloudCol;
+
+
+                return float4(color.x, color.y, color.z, 0);
             }
             ENDCG
         }

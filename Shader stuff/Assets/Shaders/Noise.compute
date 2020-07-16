@@ -30,7 +30,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 		}
 	}
 
-	float dn = 1 - map(dist, 0, 0.5f, 0, 1.0f);
+	float dn = 1 - map(dist, 0, 0.6f, 0, 1.0f);
 
 	Result[id] = float4(dn, dn, dn, dn);
 }
