@@ -8,16 +8,26 @@ public class WeatherMapGen : MonoBehaviour
     public ComputeShader noiseGen;
     public RenderTexture noiseTexture;
 
+    private void Start()
+    {
+        noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
+    }
+
     public void generateNoise()
     {
-        if (noiseTexture == null)
+        noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
+
+        if (noiseGen == null)
         {
-            noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
+            Debug.Log("Weather map couldn't be generated");
+
         }
 
+        int kernel = noiseGen.FindKernel("CSMain");
+
         noiseGen.SetFloat("texSize", textureRes);
-        noiseGen.SetTexture(0, "Result", noiseTexture);
-        noiseGen.Dispatch(0, 512 / 8, 512 / 8, 512 / 8);
+        noiseGen.SetTexture(kernel, "Result", noiseTexture);
+        noiseGen.Dispatch(kernel, 512 / 8, 512 / 8, 512 / 8);
     }
 
     public RenderTexture createTexture(int size, RenderTextureFormat format)

@@ -9,8 +9,8 @@ public class RayMarch : MonoBehaviour
 {
     public Material effectMat;
     public GameObject bounds;
-    public NoiseGenerator gen;//These should be components
-    public WeatherMapGen weatherGen;
+    private NoiseGenerator gen;
+    private WeatherMapGen weatherGen;
     public Vector3 noiseScale;
     public Vector3 noiseOffset;
     public float darknessThreshold;
@@ -18,7 +18,11 @@ public class RayMarch : MonoBehaviour
 
     public void Start()
     {
+        weatherGen = FindObjectOfType<WeatherMapGen>();
+        gen = FindObjectOfType<NoiseGenerator>();
+
         weatherGen.generateNoise();
+        gen.generateNoise();
     }
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination)

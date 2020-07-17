@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteInEditMode]
 public class NoiseGenerator : MonoBehaviour
 {
     [Range(4, 40)]
@@ -67,6 +66,11 @@ public class NoiseGenerator : MonoBehaviour
         return result;
     }
 
+    private void Start()
+    {
+        noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
+    }
+
     public void resetNoise()
     {
         noiseTexture.Release();
@@ -79,15 +83,11 @@ public class NoiseGenerator : MonoBehaviour
         Vector3[] points1 = generatePoints();
         Vector3[] points2 = generatePoints();
 
-        if (noiseTexture == null)
-        {
-            noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
-        }
+        noiseTexture = createTexture(textureRes, RenderTextureFormat.ARGBFloat);
 
         if (noiseGen == null)
         {
-            Debug.Log("Doesn't exist");
-
+            Debug.Log("Can't find compute shader");
         }
 
         ComputeBuffer pointBuffer0 = new ComputeBuffer(points1.Length, 24, ComputeBufferType.Structured);
@@ -97,13 +97,15 @@ public class NoiseGenerator : MonoBehaviour
         ComputeBuffer pointBuffer2 = new ComputeBuffer(points1.Length, 24, ComputeBufferType.Structured);
         pointBuffer2.SetData(points2);
 
+        int kernel = noiseGen.FindKernel("CSMain");
+
         noiseGen.SetInt("numPoints", points0.Length);
-        noiseGen.SetTexture(0, "Result", noiseTexture);
-        noiseGen.SetBuffer(0, "Data0", pointBuffer0);
-        noiseGen.SetBuffer(0, "Data1", pointBuffer1);
-        noiseGen.SetBuffer(0, "Data2", pointBuffer2);
+        noiseGen.SetTexture(kernel, "Result", noiseTexture);
+        noiseGen.SetBuffer(kernel, "Data0", pointBuffer0);
+        noiseGen.SetBuffer(kernel, "Data1", pointBuffer1);
+        noiseGen.SetBuffer(kernel, "Data2", pointBuffer2);
         noiseGen.SetFloat("texSize", textureRes);
-        noiseGen.Dispatch(0, 512 / 8, 512 / 8, 512 / 8);
+        noiseGen.Dispatch(kernel, 512 / 8, 512 / 8, 512 / 8);
     }
 
     public RenderTexture createTexture(int size, RenderTextureFormat format)
