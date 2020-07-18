@@ -121,41 +121,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!84 &177895016
-RenderTexture:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 3
-  m_Width: 128
-  m_Height: 128
-  m_AntiAliasing: 1
-  m_MipCount: 10
-  m_DepthFormat: 0
-  m_ColorFormat: 52
-  m_MipMap: 0
-  m_GenerateMips: 1
-  m_SRGB: 0
-  m_UseDynamicScale: 0
-  m_BindMS: 0
-  m_EnableCompatibleFormat: 1
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_Dimension: 3
-  m_VolumeDepth: 128
 --- !u!1 &284313392
 GameObject:
   m_ObjectHideFlags: 0
@@ -195,7 +160,7 @@ Transform:
   m_GameObject: {fileID: 284313392}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.4, y: 209, z: 1.4}
-  m_LocalScale: {x: 667.98157, y: 130.87753, z: 911.1374}
+  m_LocalScale: {x: 667.98157, y: 141.03236, z: 911.1374}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -385,7 +350,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 146.79599, y: 133.82, z: 18.197998}
---- !u!84 &911746323
+--- !u!84 &793144093
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -539,7 +504,7 @@ MonoBehaviour:
   numberOfPoints: 100
   textureRes: 128
   noiseGen: {fileID: 7200000, guid: fbb8f23caaeede347b5e168e1c617ad8, type: 3}
-  noiseTexture: {fileID: 177895016}
+  noiseTexture: {fileID: 1242884075}
 --- !u!114 &963194231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -554,7 +519,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textureRes: 512
   noiseGen: {fileID: 7200000, guid: 80f0f4b8441dcaa4398152d81f1eecf5, type: 3}
-  noiseTexture: {fileID: 911746323}
+  noiseTexture: {fileID: 793144093}
 --- !u!1 &1095530269
 GameObject:
   m_ObjectHideFlags: 0
@@ -648,6 +613,41 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: -149, z: 0}
+--- !u!84 &1242884075
+RenderTexture:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 3
+  m_Width: 128
+  m_Height: 128
+  m_AntiAliasing: 1
+  m_MipCount: 10
+  m_DepthFormat: 0
+  m_ColorFormat: 52
+  m_MipMap: 0
+  m_GenerateMips: 1
+  m_SRGB: 0
+  m_UseDynamicScale: 0
+  m_BindMS: 0
+  m_EnableCompatibleFormat: 1
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_Dimension: 3
+  m_VolumeDepth: 128
 --- !u!1 &1292642033
 GameObject:
   m_ObjectHideFlags: 0
